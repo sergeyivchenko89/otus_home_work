@@ -12,7 +12,6 @@ func Unpack(str string) (string, error) {
 	var builder strings.Builder
 	i := 0
 	for i < len(runesList) {
-
 		if '0' <= runesList[i] && runesList[i] <= '9' {
 			return "", ErrInvalidString
 		} else if runesList[i] == '\\' {
@@ -21,18 +20,18 @@ func Unpack(str string) (string, error) {
 
 		window := runesList[i:min(i+2, len(runesList))]
 
-		if len(window) == 1 {
+		switch {
+		case len(window) == 1:
 			builder.WriteRune(window[0])
-		} else if '0' <= window[1] && window[1] <= '9' {
+		case '0' <= window[1] && window[1] <= '9':
 			count := int(window[1] - '0')
 			builder.WriteString(strings.Repeat(string(window[0]), count))
 			i++
-		} else {
+		default:
 			builder.WriteRune(window[0])
 		}
 
 		i++
-
 	}
 	return builder.String(), nil
 }
