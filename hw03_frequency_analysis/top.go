@@ -1,34 +1,29 @@
 package hw03frequencyanalysis
 
 import (
-	"fmt"
 	"regexp"
+	"sort"
 )
 
 var validID = regexp.MustCompile(`[^ \n\t]+`)
 
 func Top10(str string) []string {
-
-	frequencyDict := make(map[string]uint8)
-	resultDict := make(map[uint8]map[string]struct{})
-	result := make([]string, 0, 10)
-	var maxFrequency uint8 = 0
-
-	i := 0
-	for {
-		indices := validID.FindStringIndex(str[i:])
-		if indices == nil {
-			break
-		}
-		substring := validID.FindString(str[i:])
-		frequencyDict[substring]++
-		if frequencyDict[substring] > maxFrequency {
-			maxFrequency = frequencyDict[substring]
-		}
-		i += indices[1]
+	if len(str) == 0 {
+		return []string{}
 	}
 
-	fmt.Println(frequencyDict)
+	source := validID.FindAllString(str, -1)
+	dest := make([]string, 0)
+	dict := make(map[string]uint)
+	for _, v := range source {
+		if dict[v] == 0 {
+			dest = append(dest, v)
+		}
+		dict[v]++
+	}
+	sort.Slice(dest, func(i, j int) bool {
+		return dict[dest[i]] > dict[dest[j]] || dict[dest[i]] == dict[dest[j]] && dest[i] < dest[j]
+	})
 
-	return result
+	return dest[0:10]
 }
