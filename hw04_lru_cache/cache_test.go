@@ -49,8 +49,65 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
+	t.Run("check first element removed", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+		c.Set("fff", 400)
+
+		val, ok := c.Get("fff")
+		require.True(t, ok)
+		require.NotNil(t, val)
+
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
+
+	t.Run("check the oldest value removed", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+		c.Get("aaa")
+		c.Get("bbb")
+		c.Set("fff", 400)
+
+		val, ok := c.Get("fff")
+		require.True(t, ok)
+		require.NotNil(t, val)
+
+		val, ok = c.Get("ccc")
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
+
+	t.Run("check value changed", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+		c.Set("aaa", 400)
+
+		value, ok := c.Get("aaa")
+		require.Equal(t, 400, value)
+		require.True(t, ok)
+	})
+
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+		c.Clear()
+
+		_, ok := c.Get("aaa")
+		require.False(t, ok)
 	})
 }
 
