@@ -3,7 +3,7 @@ package hw04lrucache
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require" //nolint:all
 )
 
 func TestList(t *testing.T) {
@@ -62,6 +62,5 @@ func TestList(t *testing.T) {
 		require.Equal(t, 20, back.Value)
 
 		require.Equal(t, 3, l.Len())
-
 	})
 }

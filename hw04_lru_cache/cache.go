@@ -36,7 +36,6 @@ func (c *lruCache) Clear() {
 }
 
 func (c lruCache) Get(key Key) (interface{}, bool) {
-
 	item, ok := c.items[key]
 	if !ok {
 		return nil, false
@@ -48,7 +47,6 @@ func (c lruCache) Get(key Key) (interface{}, bool) {
 }
 
 func (c *lruCache) Set(key Key, value interface{}) bool {
-
 	item, ok := c.items[key]
 	v := KeyValuePair{key, value}
 	if ok {

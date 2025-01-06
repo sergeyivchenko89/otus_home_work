@@ -17,7 +17,7 @@ type ListItem struct {
 }
 
 type list struct {
-	l_len       int
+	cnt         int
 	front, back *ListItem
 }
 
@@ -26,11 +26,11 @@ func NewList() List {
 }
 
 func (l list) Len() int {
-	return l.l_len
+	return l.cnt
 }
 
 func (l list) Front() *ListItem {
-	if l.l_len == 0 {
+	if l.cnt == 0 {
 		return nil
 	}
 
@@ -38,7 +38,7 @@ func (l list) Front() *ListItem {
 }
 
 func (l list) Back() *ListItem {
-	if l.l_len == 0 {
+	if l.cnt == 0 {
 		return nil
 	}
 
@@ -52,7 +52,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 		Next:  nil,
 	}
 
-	if l.l_len == 0 {
+	if l.cnt == 0 {
 		l.front = newPointer
 		l.back = newPointer
 	} else {
@@ -62,7 +62,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 		l.front.Next = old
 	}
 
-	l.l_len = l.Len() + 1
+	l.cnt = l.Len() + 1
 	return l.front
 }
 
@@ -73,7 +73,7 @@ func (l *list) PushBack(v interface{}) *ListItem {
 		Next:  nil,
 	}
 
-	if l.l_len == 0 {
+	if l.cnt == 0 {
 		l.front = newPointer
 		l.back = newPointer
 	} else {
@@ -83,12 +83,11 @@ func (l *list) PushBack(v interface{}) *ListItem {
 		old.Next = l.back
 	}
 
-	l.l_len = l.Len() + 1
+	l.cnt = l.Len() + 1
 	return l.front
 }
 
 func (l *list) Remove(i *ListItem) {
-
 	if i.Next != nil {
 		i.Next.Prev = i.Prev
 	}
@@ -97,16 +96,15 @@ func (l *list) Remove(i *ListItem) {
 		i.Prev.Next = i.Next
 	}
 
-	l.l_len = l.Len() - 1
+	l.cnt = l.Len() - 1
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-
-	if (l.l_len < 2) || (i.Prev == nil) { // если элемент единственный или первый, то ничего не делаем
+	if (l.cnt < 2) || (i.Prev == nil) { // если элемент единственный или первый, то ничего не делаем
 		return
 	}
 
-	//Меняем следующий элемент для элемента, предшествующего i
+	// Меняем следующий элемент для элемента, предшествующего i
 	i.Prev.Next = i.Next
 
 	if i.Next == nil { // Если перемещаемый элемент - последний
@@ -115,7 +113,7 @@ func (l *list) MoveToFront(i *ListItem) {
 		i.Next.Prev = i.Prev
 	}
 
-	//теперь переназначаем указатели для нового первого узла
+	// теперь переназначаем указатели для нового первого узла
 	i.Next = l.front
 	i.Prev = nil
 	l.front = i
