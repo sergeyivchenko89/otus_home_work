@@ -39,16 +39,12 @@ func Run(tasks []Task, n, m int) error {
 
 	defer close(tasksChannel)
 
-	inProgress := true
-	for inProgress {
+	for tasksExecuted == 0 || tasksInProgress != 0 {
 		select {
 		case result := <-resultChannel:
 			tasksInProgress--
 			if result != nil {
 				tasksWithErrors++
-			}
-			if tasksInProgress == 0 {
-				inProgress = false
 			}
 		default:
 		}
