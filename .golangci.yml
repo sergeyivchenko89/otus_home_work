@@ -12,6 +12,7 @@ linters-settings:
     rules:
       main:
         allow:
+          - $gostd
           - github.com/stretchr/testify/require
 
 issues:
