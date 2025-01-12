@@ -2,7 +2,6 @@ package hw05parallelexecution
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 )
 
@@ -12,18 +11,22 @@ type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
+
+	if len(tasks) == 0 {
+		return nil
+	}
+
 	wg := &sync.WaitGroup{}
 	tasksChannel := make(chan Task, n)
 	resultChannel := make(chan error)
+	tasksInProgress := 0
+	tasksExecuted := 0
+	tasksWithErrors := 0
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func(runnerNumber int) {
-			fmt.Println("Начало работы воркера ", runnerNumber)
-			defer func() {
-				wg.Done()
-				fmt.Println("Заврешение работы воркера ", runnerNumber)
-			}()
+			defer wg.Done()
 			for task := range tasksChannel {
 				resultChannel <- task()
 			}
@@ -32,69 +35,40 @@ func Run(tasks []Task, n, m int) error {
 
 	go func() {
 		wg.Wait()
-		fmt.Println("Закрываем канал результатов")
 		close(resultChannel)
 	}()
 
-	tasksLoaded := 0
-	errorsCnt := 0
-	err error
+	defer close(tasksChannel)
 
-	defer func() {
-		fmt.Println("Закрываем канал задач")
-		close(tasksChannel)
-	}()
-
-	for {
-
-		if tasksLoaded == 0 {
-			fmt.Println("Первая итерация цикла. Загружаем задачи в канал задач")
-			minValue := 0
-			if n < len(tasks) {
-				fmt.Println("Максимальное количество первых загруженных задач равно количеству воркеров.")
-				minValue = n
-			} else {
-				fmt.Println("Максимальное количество первых загруженных задач равно общему количеству задач.")
-				minValue = len(tasks)
-			}
-
-			for i := 0; i < minValue; i++ {
-				tasksChannel <- tasks[tasksLoaded]
-				tasksLoaded++
-			}
-		}
-
-		if tasksLoaded == 0 {
-			fmt.Println("Если количество загруженных задач равно нулю, то считаем что ошибок нет. Возвращаем nil")
-			return nil
-		}
+	inProgress := true
+	for inProgress {
 
 		select {
 		case result := <-resultChannel:
+			tasksInProgress--
 			if result != nil {
-				errorsCnt++
-				fmt.Println("Если воркер вернул ошибку, то увеличиваем счетчик ошибок на 1. Общее количество ошибок равно ", errorsCnt)
+				tasksWithErrors++
 			}
-
-			if errorsCnt == m {
-				fmt.Println("Общее количество ошибок равно ", errorsCnt)
-				tasksLoaded = len(tasks)
+			if tasksInProgress == 0 {
+				inProgress = false
 			}
-
-			if tasksLoaded >= len(tasks) {
-				fmt.Println("Завершение программы")
-				return nil
-			}
-
-			tasksChannel <- tasks[tasksLoaded]
-			tasksLoaded++
+		default:
 		}
 
+		if m > 0 && tasksWithErrors >= m {
+			continue
+		}
+
+		if tasksExecuted < len(tasks) && tasksInProgress < n {
+			tasksChannel <- tasks[tasksExecuted]
+			tasksInProgress++
+			tasksExecuted++
+		}
 	}
 
-	if success {
-		return nil
-	} else {
+	if m > 0 && tasksWithErrors >= m {
 		return ErrErrorsLimitExceeded
 	}
+
+	return nil
 }
