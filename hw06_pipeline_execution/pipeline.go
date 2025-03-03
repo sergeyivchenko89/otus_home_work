@@ -1,5 +1,7 @@
 package hw06pipelineexecution
 
+import "fmt"
+
 type (
 	In  = <-chan interface{}
 	Out = In
@@ -11,28 +13,43 @@ type Stage func(in In) (out Out)
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 
 	out := make(Out)
-	tasksChannel := make(Bi, len(stages))
-	resultChannel := make(Bi, len(stages))
+	returnChannel := make(Bi)
 
-	go func(stages []Stage) {
-		for i, stage := range stages {
-			if i == 0 {
-				out = stage(tasksChannel)
-			} else {
-				out = stage(out)
-			}
+	for i, stage := range stages {
+		if i == 0 {
+			out = stage(in)
+		} else {
+			out = stage(out)
 		}
-	}(stages)
+	}
 
 	go func() {
-		for {
+		isRunning := true
+		isDone := false
+		for isRunning {
+			fmt.Println("Is Running: ", isRunning)
 			select {
-			case inValue, ok := <-in:
 			case outValue, ok := <-out:
-
+				if isDone {
+					continue
+				}
+				if !ok {
+					close(returnChannel)
+					isRunning = false
+					isDone = true
+					continue
+				}
+				returnChannel <- outValue
+			case <-done:
+				fmt.Println("Close done channel")
+				isDone = true
+				isRunning = false
+				close(returnChannel)
+				return
+			default:
 			}
 		}
 	}()
 
-	return resultChannel
+	return returnChannel
 }
