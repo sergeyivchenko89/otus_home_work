@@ -1,7 +1,5 @@
 package hw06pipelineexecution
 
-import "fmt"
-
 type (
 	In  = <-chan interface{}
 	Out = In
@@ -24,29 +22,25 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	}
 
 	go func() {
-		isRunning := true
 		isDone := false
-		for isRunning {
-			fmt.Println("Is Running: ", isRunning)
+		for {
 			select {
 			case outValue, ok := <-out:
-				if isDone {
-					continue
-				}
 				if !ok {
 					close(returnChannel)
-					isRunning = false
-					isDone = true
+					return
+				}
+				if isDone {
 					continue
 				}
 				returnChannel <- outValue
 			case <-done:
-				fmt.Println("Close done channel")
+				if isDone {
+					continue
+				}
 				isDone = true
-				isRunning = false
 				close(returnChannel)
-				return
-			default:
+				continue
 			}
 		}
 	}()
