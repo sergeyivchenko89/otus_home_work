@@ -9,7 +9,6 @@ type (
 type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-
 	out := make(Out)
 	returnChannel := make(Bi)
 
@@ -26,14 +25,16 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		for {
 			select {
 			case outValue, ok := <-out:
-				if !ok {
+				switch {
+				case ok && !isDone:
+					returnChannel <- outValue
+					continue
+				case !ok && !isDone:
 					close(returnChannel)
 					return
+				case !ok && isDone:
+					return
 				}
-				if isDone {
-					continue
-				}
-				returnChannel <- outValue
 			case <-done:
 				if isDone {
 					continue
